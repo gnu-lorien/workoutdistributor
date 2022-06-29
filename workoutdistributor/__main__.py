@@ -36,7 +36,7 @@ class WorkoutPeriod:
     end: timedelta
 
     def is_in(self, now):
-        d = datetime(now.year, now.month, now.day)
+        d = datetime(now.year, now.month, now.day, tzinfo=now.tzinfo)
         start = d + self.start
         end = d + self.end
         return start >= now and now <= end
@@ -242,6 +242,7 @@ def andrew_workout_plan():
 
 def generate_sample_week_increments():
     current = datetime.now()
+    current = current.astimezone()
     final = current + timedelta(days=8)
     increment = timedelta(minutes=30)
     while current <= final:

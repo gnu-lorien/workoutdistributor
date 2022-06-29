@@ -83,6 +83,11 @@ class Workout:
                 return True
         return False
 
+    def _do_exercise_action(self, now, exercise):
+        a = Action(exercise=exercise, time=now, reps=1, sets=1)
+        self.actions.append(a)
+        return a
+
     def pick_action_for(self, now):
         # Don't do any selecting if outside of the workout hours
         if not self.workout_plan.periods[now.weekday()].is_in(now):
@@ -95,14 +100,10 @@ class Workout:
         unmet = [e for e in available if self.has_unmet_goals(now, e)]
         if 0 != len(unmet):
             random.shuffle(unmet)
-            a = Action(exercise=unmet[0], time=now, reps=1, sets=1)
-            self.actions.append(a)
-            return a
+            return self._do_exercise_action(now, unmet[0])
         # Pick from remaining exercises
         random.shuffle(available)
-        a = Action(exercise=available[0], time=now, reps=1, sets=1)
-        self.actions.append(a)
-        return a
+        return self._do_exercise_action(now, available[0])
 
 
 def andrew_exercises():

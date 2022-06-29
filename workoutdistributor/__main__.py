@@ -84,7 +84,9 @@ class Workout:
         return False
 
     def _do_exercise_action(self, now, exercise):
-        a = Action(exercise=exercise, time=now, reps=1, sets=1)
+        a = Action(exercise=exercise, time=now, reps=0, sets=0)
+        a.reps = random.randint(exercise.minimum_reps, exercise.maximum_reps)
+        a.sets = random.randint(exercise.minimum_sets, exercise.maximum_sets)
         self.actions.append(a)
         return a
 

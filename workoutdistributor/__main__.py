@@ -258,7 +258,8 @@ def generate_sample_week(workout_plan):
 
 
 def main():
-    pprint(list(generate_sample_week(andrew_workout_plan())))
+    for action in list(generate_sample_week(andrew_workout_plan())):
+        print(f"On {action.time} do {action.exercise.name} for {action.reps} reps and {action.sets} sets")
 
 
 main()

@@ -34,6 +34,12 @@ class WorkoutPeriod:
     start: timedelta
     end: timedelta
 
+    def is_in(self, now):
+        d = datetime(now.year, now.month, now.day)
+        start = d + self.start
+        end = d + self.end
+        return start >= now and now <= end
+
 
 @dataclass
 class WorkoutPlan:
@@ -51,7 +57,7 @@ class Action:
 
 
 class Workout:
-    def __init__(self, workout_plan):
+    def __init__(self, workout_plan: WorkoutPlan):
         self.workout_plan = workout_plan
         self.actions = []
 
@@ -64,6 +70,8 @@ class Workout:
 
     def pick_action_for(self, now):
         # Don't do any selecting if outside of the workout hours
+        if not self.workout_plan.periods[now.weekday()].is_in(now):
+            return None
         # Gather all available exercises
         available = [e for e in self.workout_plan.exercises if self.is_exercise_available(now, e)]
         if 0 == len(available):

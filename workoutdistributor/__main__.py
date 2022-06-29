@@ -68,6 +68,20 @@ class Workout:
                     return False
         return True
 
+    def has_unmet_goals(self, now, exercise):
+        for goal in exercise.goals:
+            earliest_goal_time = now - goal.period
+            running_reps = 0
+            running_sets = 0
+            for action in self.actions:
+                if action.time < earliest_goal_time:
+                    continue
+                running_reps += action.reps
+                running_sets += action.sets
+            if running_reps < goal.reps_per_period and running_sets <= goal.sets_per_period:
+                return True
+        return False
+
     def pick_action_for(self, now):
         # Don't do any selecting if outside of the workout hours
         if not self.workout_plan.periods[now.weekday()].is_in(now):
@@ -76,12 +90,15 @@ class Workout:
         available = [e for e in self.workout_plan.exercises if self.is_exercise_available(now, e)]
         if 0 == len(available):
             return None
-        a = Action(exercise=available[0], time=now, reps=0, sets=0)
-        self.actions.append(a)
-        # Find all exercises with an unmet goal
         # Pick an unmet exercise first
-        # Find all exercises with no goals or met goals
-        # Pick one
+        unmet = [e for e in available if self.has_unmet_goals(now, e)]
+        if 0 != len(unmet):
+            a = Action(exercise=unmet[0], time=now, reps=1, sets=1)
+            self.actions.append(a)
+            return a
+        # Pick from remaining exercises
+        a = Action(exercise=available[0], time=now, reps=1, sets=1)
+        self.actions.append(a)
         return a
 
 

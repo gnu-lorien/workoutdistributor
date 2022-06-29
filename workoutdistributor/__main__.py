@@ -44,10 +44,10 @@ class WorkoutPlan:
 
 @dataclass
 class Action:
-    exercise: Exercise
     time: datetime
     reps: int
     sets: int
+    exercise: Exercise
 
 
 class Workout:
@@ -55,9 +55,25 @@ class Workout:
         self.workout_plan = workout_plan
         self.actions = []
 
+    def is_exercise_available(self, now, exercise):
+        for action in reversed(self.actions):
+            if action.exercise == exercise:
+                if (now - action.time) < exercise.minimum_timedelta_between:
+                    return False
+        return True
+
     def pick_action_for(self, now):
-        a = Action(None, now, 0, 0)
+        # Don't do any selecting if outside of the workout hours
+        # Gather all available exercises
+        available = [e for e in self.workout_plan.exercises if self.is_exercise_available(now, e)]
+        if 0 == len(available):
+            return None
+        a = Action(exercise=available[0], time=now, reps=0, sets=0)
         self.actions.append(a)
+        # Find all exercises with an unmet goal
+        # Pick an unmet exercise first
+        # Find all exercises with no goals or met goals
+        # Pick one
         return a
 
 

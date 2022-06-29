@@ -75,6 +75,8 @@ class Workout:
             running_reps = 0
             running_sets = 0
             for action in self.actions:
+                if action.exercise != exercise:
+                    continue
                 if action.time < earliest_goal_time:
                     continue
                 running_reps += action.reps

@@ -3,6 +3,7 @@ from datetime import timedelta, datetime
 from typing import List, Dict
 from pprint import pprint
 import calendar
+import random
 
 
 @dataclass
@@ -93,10 +94,12 @@ class Workout:
         # Pick an unmet exercise first
         unmet = [e for e in available if self.has_unmet_goals(now, e)]
         if 0 != len(unmet):
+            random.shuffle(unmet)
             a = Action(exercise=unmet[0], time=now, reps=1, sets=1)
             self.actions.append(a)
             return a
         # Pick from remaining exercises
+        random.shuffle(available)
         a = Action(exercise=available[0], time=now, reps=1, sets=1)
         self.actions.append(a)
         return a

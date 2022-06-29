@@ -245,9 +245,11 @@ def generate_sample_week_increments():
     current = current.astimezone()
     final = current + timedelta(days=8)
     increment = timedelta(minutes=30)
+    jitter = timedelta(minutes=30)
     while current <= final:
         yield current
         current += increment
+        current += timedelta(seconds=random.randint(0, jitter.seconds))
 
 
 def generate_sample_week(workout_plan):

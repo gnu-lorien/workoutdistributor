@@ -260,6 +260,13 @@ def generate_sample_week(workout_plan):
             yield action
 
 
+def generate_sample_week_with_day_randomization(workout_plan):
+    """Generate a sample week in which a whole day is planned and then the workouts for that day are randomized.
+    This avoids always front-loading the goal exercises and ending with the non-goal exercises
+    """
+    pass
+
+
 def main():
     for action in list(generate_sample_week(andrew_workout_plan())):
         print(f"On {action.time} do {action.exercise.name} for {action.reps} reps and {action.sets} sets")

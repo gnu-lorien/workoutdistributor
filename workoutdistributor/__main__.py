@@ -39,7 +39,7 @@ class WorkoutPeriod:
         d = datetime(now.year, now.month, now.day, tzinfo=now.tzinfo)
         start = d + self.start
         end = d + self.end
-        return start >= now and now <= end
+        return now >= start and now <= end
 
 
 @dataclass

@@ -85,6 +85,15 @@ class Workout:
                 return True
         return False
 
+    def been_too_long(self, now, exercise):
+        minimum_longest_time = now - exercise.maximum_timedelta_between
+        for action in self.actions:
+            if action.exercise != exercise:
+                continue
+            if action.time >= minimum_longest_time:
+                return False
+        return True
+
     def _do_exercise_action(self, now, exercise):
         a = Action(exercise=exercise, time=now, reps=0, sets=0)
         a.reps = random.randint(exercise.minimum_reps, exercise.maximum_reps)
@@ -105,6 +114,10 @@ class Workout:
         if 0 != len(unmet):
             random.shuffle(unmet)
             return self._do_exercise_action(now, unmet[0])
+        passed_max = [e for e in available if self.been_too_long(now, e)]
+        if 0 != len(passed_max):
+            random.shuffle(passed_max)
+            return self._do_exercise_action(now, passed_max[0])
         # Pick from remaining exercises
         random.shuffle(available)
         return self._do_exercise_action(now, available[0])

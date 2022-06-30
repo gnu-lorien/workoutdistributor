@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import timedelta, datetime
 from typing import List, Dict
 from pprint import pprint
+from copy import copy
 import calendar
 import random
 
@@ -260,15 +261,39 @@ def generate_sample_week(workout_plan):
             yield action
 
 
+def shuffle_but_keep_time(actions):
+    originals = [copy(a.time) for a in actions]
+    random.shuffle(actions)
+    for original, action in zip(originals, actions):
+        action.time = original
+
+
 def generate_sample_week_with_day_randomization(workout_plan):
     """Generate a sample week in which a whole day is planned and then the workouts for that day are randomized.
     This avoids always front-loading the goal exercises and ending with the non-goal exercises
     """
-    pass
+    workout = Workout(workout_plan)
+    for now in generate_sample_week_increments():
+        workout.pick_action_for(now)
+    current_day = workout.actions[0].time.weekday()
+    day_randomized_actions = []
+    this_day_actions = []
+    for action in workout.actions:
+        if action.time.weekday() != current_day:
+            shuffle_but_keep_time(this_day_actions)
+            day_randomized_actions.extend(this_day_actions)
+            current_day = action.time.weekday()
+            this_day_actions = []
+        this_day_actions.append(action)
+    if 0 != len(this_day_actions):
+        shuffle_but_keep_time(this_day_actions)
+        day_randomized_actions.extend(this_day_actions)
+    for action in day_randomized_actions:
+        yield action
 
 
 def main():
-    for action in list(generate_sample_week(andrew_workout_plan())):
+    for action in list(generate_sample_week_with_day_randomization(andrew_workout_plan())):
         print(f"On {action.time} do {action.exercise.name} for {action.reps} reps and {action.sets} sets")
 
 

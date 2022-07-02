@@ -9,11 +9,11 @@ import calendar
 import random
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy import text, DateTime, Table
+from sqlalchemy import text, DateTime, Table, select
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer, Unicode, Interval, UnicodeText
-from sqlalchemy.orm import declarative_base, Session
+from sqlalchemy.orm import declarative_base, Session, selectinload
 from sqlalchemy.orm import relationship
 
 Base = declarative_base()
@@ -35,7 +35,7 @@ class Exercise(Base):
     minimum_timedelta_between = Column(Interval())  # Minimum amount of time to put between each time of this exercise
     maximum_timedelta_between = Column(Interval())  # Maximum amount of time to put between each time of this exercise
 
-    goals = relationship("GoalPeriod", back_populates="exercise", cascade="all, delete-orphan")
+    goals = relationship("GoalPeriod", back_populates="exercise", cascade="all, delete-orphan", lazy="selectin")
 
 
 class GoalPeriod(Base):
@@ -57,6 +57,8 @@ class WorkoutPeriod(Base):
     day_of_week = Column(Integer())
     start = Column(Interval())
     end = Column(Interval())
+
+    __mapper_args__ = {"eager_defaults": True}
 
     def is_in(self, now):
         d = datetime(now.year, now.month, now.day, tzinfo=now.tzinfo)
@@ -85,8 +87,9 @@ class WorkoutPlan(Base):
     id = Column(Integer, primary_key=True)
 
     name = Column(Unicode(30))
-    exercises = relationship("Exercise", secondary=workout_plan_to_exercises_association_table)
-    periods = relationship("WorkoutPeriod", secondary=workout_plan_to_workout_periods_association_table)
+    exercises = relationship("Exercise", secondary=workout_plan_to_exercises_association_table, lazy="selectin")
+    periods = relationship("WorkoutPeriod", secondary=workout_plan_to_workout_periods_association_table,
+                           lazy="selectin")
 
 
 class Action(Base):
@@ -144,9 +147,13 @@ class Workout:
         self.actions.append(a)
         return a
 
-    def pick_action_for(self, now):
+    async def pick_action_for(self, now):
         # Don't do any selecting if outside of the workout hours
-        if not self.workout_plan.periods[now.weekday()].is_in(now):
+        out_of_working_hours = True
+        for period in self.workout_plan.periods:
+            if period.day_of_week == now.weekday() and period.is_in(now):
+                out_of_working_hours = False
+        if out_of_working_hours:
             return None
         # Gather all available exercises
         available = [e for e in self.workout_plan.exercises if self.is_exercise_available(now, e)]
@@ -285,6 +292,12 @@ async def andrew_workout_plan(session):
     await session.commit()
 
 
+async def get_andrew_workout_plan(session):
+    stmt = select(WorkoutPlan).where(WorkoutPlan.name.is_("Andrew's Workout Plan"))
+    for wp in await session.scalars(stmt):
+        return wp
+
+
 def generate_sample_week_increments():
     current = datetime.now()
     current = current.astimezone()
@@ -297,7 +310,7 @@ def generate_sample_week_increments():
         current += timedelta(seconds=random.randint(0, jitter.seconds))
 
 
-def generate_sample_week(workout_plan):
+async def generate_sample_week(workout_plan):
     workout = Workout(workout_plan)
     for now in generate_sample_week_increments():
         action = workout.pick_action_for(now)
@@ -312,13 +325,13 @@ def shuffle_but_keep_time(actions):
         action.time = original
 
 
-def generate_sample_week_with_day_randomization(workout_plan):
+async def generate_sample_week_with_day_randomization(workout_plan):
     """Generate a sample week in which a whole day is planned and then the workouts for that day are randomized.
     This avoids always front-loading the goal exercises and ending with the non-goal exercises
     """
     workout = Workout(workout_plan)
     for now in generate_sample_week_increments():
-        workout.pick_action_for(now)
+        await workout.pick_action_for(now)
     current_day = workout.actions[0].time.weekday()
     day_randomized_actions = []
     this_day_actions = []
@@ -345,8 +358,10 @@ async def main():
     async with AsyncSession(engine) as session:
         await andrew_workout_plan(session)
 
-    for action in list(generate_sample_week_with_day_randomization(andrew_workout_plan())):
-        print(f"On {action.time} do {action.exercise.name} for {action.reps} reps and {action.sets} sets")
+    async with AsyncSession(engine) as session:
+        wp = await get_andrew_workout_plan(session)
+        async for action in generate_sample_week_with_day_randomization(wp):
+            print(f"On {action.time} do {action.exercise.name} for {action.reps} reps and {action.sets} sets")
 
 
 run(main)

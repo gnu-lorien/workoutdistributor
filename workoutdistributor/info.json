@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Cog-Creators/Red-DiscordBot/V3/develop/schema/red_cog.schema.json",
+  "name": "WorkoutDistributor",
+  "short": "Set exercises and distribute them randomly throughout your day",
+  "description": "Set exercises and distribute them randomly throughout your day",
+  "end_user_data_statement": "Stores your custom exercises and which of those exercises you've done recently",
+  "author": [
+    "Andrew Sayman"
+  ],
+  "required_cogs": {},
+  "requirements": [],
+  "tags": [],
+  "min_bot_version": "3.3.10",
+  "hidden": false,
+  "disabled": false,
+  "type": "COG"
+}

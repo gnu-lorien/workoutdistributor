@@ -1,3 +1,5 @@
+from anyio import run
+
 from dataclasses import dataclass
 from datetime import timedelta, datetime
 from typing import List, Dict
@@ -6,35 +8,55 @@ from copy import copy
 import calendar
 import random
 
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy import text, DateTime, Table
+from sqlalchemy import Column
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer, Unicode, Interval, UnicodeText
+from sqlalchemy.orm import declarative_base, Session
+from sqlalchemy.orm import relationship
 
-@dataclass
-class GoalPeriod:
-    period: timedelta  # The period of time we hope to achieve these within
-    reps_per_period: int  # Number of reps we hope to do within a certain period
-    sets_per_period: int  # Number of sets we hope to do within a certain period
-
-
-@dataclass
-class Exercise:
-    name: str  # Short name of the workout
-    description: str  # Description of the details of the workout
-    rep_description: str  # Description of what counts as 1 rep
-
-    minimum_reps: int
-    maximum_reps: int
-    minimum_sets: int
-    maximum_sets: int
-
-    minimum_timedelta_between: timedelta  # Minimum amount of time to put between each time of this exercise
-    maximum_timedelta_between: timedelta  # Maximum amount of time to put between each time of this exercise
-
-    goals: List[GoalPeriod]
+Base = declarative_base()
 
 
-@dataclass
-class WorkoutPeriod:
-    start: timedelta
-    end: timedelta
+class Exercise(Base):
+    __tablename__ = "exercise"
+    id = Column(Integer, primary_key=True)
+
+    name = Column(Unicode(30))  # Short name of the workout
+    description = Column(UnicodeText())  # Description of the details of the workout
+    rep_description = Column(UnicodeText())  # Description of what counts as 1 rep
+
+    minimum_reps = Column(Integer())
+    maximum_reps = Column(Integer())
+    minimum_sets = Column(Integer())
+    maximum_sets = Column(Integer())
+
+    minimum_timedelta_between = Column(Interval())  # Minimum amount of time to put between each time of this exercise
+    maximum_timedelta_between = Column(Interval())  # Maximum amount of time to put between each time of this exercise
+
+    goals = relationship("GoalPeriod", back_populates="exercise", cascade="all, delete-orphan")
+
+
+class GoalPeriod(Base):
+    __tablename__ = "goal_period"
+
+    id = Column(Integer, primary_key=True)
+    period = Column(Interval())  # The period of time we hope to achieve these within
+    reps_per_period = Column(Integer)  # Number of reps we hope to do within a certain period
+    sets_per_period = Column(Integer)  # Number of sets we hope to do within a certain period
+
+    exercise_id = Column(Integer(), ForeignKey("exercise.id"))
+    exercise = relationship("Exercise", back_populates="goals")
+
+
+class WorkoutPeriod(Base):
+    __tablename__ = "workout_period"
+    id = Column(Integer, primary_key=True)
+
+    day_of_week = Column(Integer())
+    start = Column(Interval())
+    end = Column(Interval())
 
     def is_in(self, now):
         d = datetime(now.year, now.month, now.day, tzinfo=now.tzinfo)
@@ -43,19 +65,39 @@ class WorkoutPeriod:
         return start <= now <= end
 
 
-@dataclass
-class WorkoutPlan:
-    name: str
-    exercises: List[Exercise]
-    periods: Dict[int, WorkoutPeriod]
+workout_plan_to_exercises_association_table = Table(
+    "workout_plan_to_exercises",
+    Base.metadata,
+    Column("exercise_id", ForeignKey("exercise.id"), primary_key=True),
+    Column("workout_plan_id", ForeignKey("workout_plan.id"), primary_key=True)
+)
+
+workout_plan_to_workout_periods_association_table = Table(
+    "workout_plan_to_workout_periods",
+    Base.metadata,
+    Column("workout_period_id", ForeignKey("workout_period.id"), primary_key=True),
+    Column("workout_plan_id", ForeignKey("workout_plan.id"), primary_key=True)
+)
 
 
-@dataclass
-class Action:
-    time: datetime
-    reps: int
-    sets: int
-    exercise: Exercise
+class WorkoutPlan(Base):
+    __tablename__ = "workout_plan"
+    id = Column(Integer, primary_key=True)
+
+    name = Column(Unicode(30))
+    exercises = relationship("Exercise", secondary=workout_plan_to_exercises_association_table)
+    periods = relationship("WorkoutPeriod", secondary=workout_plan_to_workout_periods_association_table)
+
+
+class Action(Base):
+    __tablename__ = "action"
+    id = Column(Integer, primary_key=True)
+
+    time = Column(DateTime(timezone=True))
+    reps = Column(Integer())
+    sets = Column(Integer())
+    exercise_id = Column(Integer(), ForeignKey("exercise.id"))
+    exercise = relationship("Exercise", uselist=False)
 
 
 class Workout:
@@ -225,20 +267,22 @@ def andrew_exercises():
     ]
 
 
-def andrew_workout_plan():
-    return WorkoutPlan(
+async def andrew_workout_plan(session):
+    wp = WorkoutPlan(
         name="Andrew's Workout Plan",
         exercises=andrew_exercises(),
-        periods={
-            calendar.MONDAY: WorkoutPeriod(timedelta(hours=11), timedelta(hours=11 + 8)),
-            calendar.TUESDAY: WorkoutPeriod(timedelta(hours=11), timedelta(hours=11 + 8)),
-            calendar.WEDNESDAY: WorkoutPeriod(timedelta(hours=11), timedelta(hours=11 + 8)),
-            calendar.THURSDAY: WorkoutPeriod(timedelta(hours=11), timedelta(hours=11 + 8)),
-            calendar.FRIDAY: WorkoutPeriod(timedelta(hours=11), timedelta(hours=11 + 8)),
-            calendar.SATURDAY: WorkoutPeriod(timedelta(hours=13), timedelta(hours=13 + 8)),
-            calendar.SUNDAY: WorkoutPeriod(timedelta(hours=13), timedelta(hours=13 + 5)),
-        }
+        periods=[
+            WorkoutPeriod(day_of_week=calendar.MONDAY, start=timedelta(hours=11), end=timedelta(hours=11 + 8)),
+            WorkoutPeriod(day_of_week=calendar.TUESDAY, start=timedelta(hours=11), end=timedelta(hours=11 + 8)),
+            WorkoutPeriod(day_of_week=calendar.WEDNESDAY, start=timedelta(hours=11), end=timedelta(hours=11 + 8)),
+            WorkoutPeriod(day_of_week=calendar.THURSDAY, start=timedelta(hours=11), end=timedelta(hours=11 + 8)),
+            WorkoutPeriod(day_of_week=calendar.FRIDAY, start=timedelta(hours=11), end=timedelta(hours=11 + 8)),
+            WorkoutPeriod(day_of_week=calendar.SATURDAY, start=timedelta(hours=13), end=timedelta(hours=13 + 8)),
+            WorkoutPeriod(day_of_week=calendar.SUNDAY, start=timedelta(hours=13), end=timedelta(hours=13 + 5)),
+        ]
     )
+    session.add(wp)
+    await session.commit()
 
 
 def generate_sample_week_increments():
@@ -292,9 +336,17 @@ def generate_sample_week_with_day_randomization(workout_plan):
         yield action
 
 
-def main():
+async def main():
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=True, future=True)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    async with AsyncSession(engine) as session:
+        await andrew_workout_plan(session)
+
     for action in list(generate_sample_week_with_day_randomization(andrew_workout_plan())):
         print(f"On {action.time} do {action.exercise.name} for {action.reps} reps and {action.sets} sets")
 
 
-main()
+run(main)

@@ -1,3 +1,5 @@
 sqlalchemy
 anyio
 aiosqlite
+discord
+python-dotenv

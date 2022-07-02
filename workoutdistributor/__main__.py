@@ -19,6 +19,20 @@ from sqlalchemy.orm import relationship
 Base = declarative_base()
 
 
+class Zone(Base):
+    """Different shared muscle groups or exercise types
+
+    One zone could represent cardio, and another muscles.
+
+    A more fine-grained approach could define individual muscle groups and types of cardio.
+    """
+    __tablename__ = "zone"
+    id = Column(Integer, primary_key=True)
+
+    name = Column(Unicode(30))
+    description = Column(UnicodeText())
+
+
 class Exercise(Base):
     __tablename__ = "exercise"
     id = Column(Integer, primary_key=True)
@@ -34,6 +48,8 @@ class Exercise(Base):
 
     minimum_timedelta_between = Column(Interval())  # Minimum amount of time to put between each time of this exercise
     maximum_timedelta_between = Column(Interval())  # Maximum amount of time to put between each time of this exercise
+
+    zone_id = Column(Integer(), ForeignKey("zone.id"))
 
     goals = relationship("GoalPeriod", back_populates="exercise", cascade="all, delete-orphan", lazy="selectin")
 
@@ -83,6 +99,11 @@ workout_plan_to_workout_periods_association_table = Table(
 
 
 class WorkoutPlan(Base):
+    """A plan of exercises to try to do.
+
+    Exercises can be grouped by their minimums and maximums, which come from the exercise definitions themselves, or by
+    zones. This allows a workout to group zones on certain days and to also put time between zones on different days.
+    """
     __tablename__ = "workout_plan"
     id = Column(Integer, primary_key=True)
 
@@ -90,6 +111,7 @@ class WorkoutPlan(Base):
     exercises = relationship("Exercise", secondary=workout_plan_to_exercises_association_table, lazy="selectin")
     periods = relationship("WorkoutPeriod", secondary=workout_plan_to_workout_periods_association_table,
                            lazy="selectin")
+    minimum_timedelta_between_zones = Column(Interval())
 
 
 class Action(Base):

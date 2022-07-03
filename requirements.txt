@@ -3,3 +3,4 @@ anyio
 aiosqlite
 discord
 python-dotenv
+Red-DiscordBot

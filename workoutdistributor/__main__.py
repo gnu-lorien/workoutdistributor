@@ -15,6 +15,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy import Integer, Unicode, Interval, UnicodeText
 from sqlalchemy.orm import declarative_base, Session, selectinload
 from sqlalchemy.orm import relationship
+import appdirs
 
 Base = declarative_base()
 
@@ -372,6 +373,7 @@ async def generate_sample_week_with_day_randomization(workout_plan):
 
 
 async def main():
+    print(appdirs.user_data_dir(appname="WorkoutDistributor", roaming=True))
     engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=True, future=True)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)

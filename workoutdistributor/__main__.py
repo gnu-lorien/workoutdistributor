@@ -201,9 +201,50 @@ class Workout:
 def andrew_exercises(session):
     plantar = Zone(name="Plantar Fasciitis")
     sciatica = Zone(name="Sciatica")
-    neck = Zone(name="Slipped neck disk")
-    session.add_all([plantar, sciatica, neck])
+    core_one = Zone(name="Core 1 Plan", description="Slipped neck disk original plan")
+    core_two = Zone(name="Core 2 Plan", description="Slipped neck disk second plan")
+    core_three = Zone(name="Core 3 Plan", description="Slipped neck disk third plan")
+    session.add_all([plantar, sciatica, core_one, core_two, core_three])
     return [
+        Exercise(
+            name="Planks with Protraction",
+            description="Perform a plank by keeping your abdominals tight and pushing up through your forearms. You should be able to draw a straight line from your ankles, through your hips to your shoulders. Once in a plank position, attempt to push up higher through your forearms, arching your upper back. Slowly lower back to the plank position. Repeat as directed.",
+            rep_description="1 protraction while in plank position",
+            minimum_reps=10,
+            maximum_reps=10,
+            minimum_sets=2,
+            maximum_sets=3,
+            minimum_timedelta_between=timedelta(hours=16),
+            maximum_timedelta_between=timedelta(days=2),
+            goals=[GoalPeriod(period=timedelta(days=2), reps_per_period=20, sets_per_period=2)],
+            zone=core_one
+        ),
+        Exercise(
+            name="Bilateral Shoulder External Rotation & Retraction With Resistance Band",
+            description="Holding a short exercise band in both hands, and standing up straight with your back straight, bend your elbows so that they are at 90 degrees and squeeze your elbows in to your sides. Keeping your elbows at your sides, rotate your arms outwards, bringing your hands apart. Squeeze your shoulder blades together as you do so. Repeat as directed.",
+            rep_description="5 second hold",
+            minimum_reps=10,
+            maximum_reps=15,
+            minimum_sets=2,
+            maximum_sets=2,
+            minimum_timedelta_between=timedelta(hours=1),
+            maximum_timedelta_between=timedelta(hours=2),
+            goals=[GoalPeriod(period=timedelta(days=2), reps_per_period=20, sets_per_period=4)],
+            zone=core_one
+        ),
+        Exercise(
+            name="Dumbell D2 Flexion with a band instead (drawing sword)",
+            description="Starting Position: Stand with your arms in an X-position, crossed over each other at your wrists, palms facing inward, holding a dumbbell in each. Movement: Making sure that your arms stay straight, elevate your arms out and overhead to make a and “Y” position. Then slowly lower them down. Tip: Make sure you don't arch your back as you lift your arms overhead.",
+            rep_description="5 second hold",
+            minimum_reps=10,
+            maximum_reps=15,
+            minimum_sets=2,
+            maximum_sets=3,
+            minimum_timedelta_between=timedelta(hours=1),
+            maximum_timedelta_between=timedelta(hours=2),
+            goals=[GoalPeriod(period=timedelta(days=2), reps_per_period=20, sets_per_period=4)],
+            zone=core_one
+        ),
         Exercise(
             name="Open books",
             description="Lie on your side and raise one arm away from the other like you're a book being opened",
@@ -215,7 +256,85 @@ def andrew_exercises(session):
             minimum_timedelta_between=timedelta(days=2),
             maximum_timedelta_between=timedelta(days=7),
             goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=1, sets_per_period=1)],
-            zone=neck
+            zone=core_one
+        ),
+        Exercise(
+            name="Supine Shoulder Horizontal Abduction With Resistance Band",
+            description="Starting Position: -Begin by lying on your back in the hooklying position. Grasp a band shoulder width apart with your arms extended straight towards the ceiling. Movement: -Stretch the band by slowly moving your hands away from each other towards the floor while keeping your arms straight. At the end of the motion your trunk and arms will form the shape of a T. Pause, then lift your hips toward the ceiling in a bridge and hold 5 seconds (not shown) Slowly return to the starting position. Repeat as prescribed. Tip: -Keep your shoulder blade squeezed down and back throughout the exercise and avoid shrugging. Hold a slight chin tuck.",
+            rep_description="5 second hold",
+            minimum_reps=10,
+            maximum_reps=10,
+            minimum_sets=2,
+            maximum_sets=2,
+            minimum_timedelta_between=timedelta(hours=1),
+            maximum_timedelta_between=timedelta(hours=2),
+            goals=[GoalPeriod(period=timedelta(days=2), reps_per_period=20, sets_per_period=4)],
+            zone=core_two
+        ),
+        Exercise(
+            name="Supine Shoulder Flexion With Cane Wand",
+            description="Lying on your back, hold onto a cane with both hands with your palms facing inwards. Begin with the cane on your stomach and slowly lift over your head while keeping your elbows straight and your back flat on the floor. Pull ribs down toward the surface, then hands toward ceiling. Pause and bring both knees to the bar, while pressing low back into the surface. Lower feet toward the ground without letting your low back come off the surface, and repeat",
+            rep_description="1 action",
+            minimum_reps=2,
+            maximum_reps=10,
+            minimum_sets=2,
+            maximum_sets=2,
+            minimum_timedelta_between=timedelta(days=1),
+            maximum_timedelta_between=timedelta(days=3),
+            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=10, sets_per_period=2)],
+            zone=core_two
+        ),
+        Exercise(
+            name="Serratus Hug With Resistance Band",
+            description="Starting Position: Begin standing with a band anchored behind you at chest height. Grasp the ends of the band with both hands. Extend your arms straight out in front of you. Movement: Hold your elbows locked into extension as you reach farther forward with your hands by moving your shoulder blades forward. Then, slowly allow your shoulder blades to squeeze together against the resistance of the band. Repeat as prescribed. Tip: Keep your neck in neutral by holding a slight chin tuck throughout the exercise. unlike the video, take your arms out wide then forward, like you're hugging around a tree, sliding shoulderblades as far away from each other as you can, without lifting shoulders toward your ears.",
+            rep_description="5 second hold",
+            minimum_reps=10,
+            maximum_reps=15,
+            minimum_sets=1,
+            maximum_sets=2,
+            minimum_timedelta_between=timedelta(hours=1),
+            maximum_timedelta_between=timedelta(hours=2),
+            goals=[GoalPeriod(period=timedelta(days=2), reps_per_period=15, sets_per_period=2)],
+            zone=core_two
+        ),
+        Exercise(
+            name="Wall Trapezius Strengthening",
+            description="Starting Position: Stand with your back against a wall or doorway. Engage your shoulder blade muscles to bring your scapula down and back, and then place your arms in a 'W' position with your elbows,wrists, and back of hands against the wall. Movement: From this position, move your arms up and down as if making a 'snow angel' while keeping everything in contact with the wall. Be sure to keep head in a chin tuck position. Repeat for as many reps/sets as recommended by your therapist. low back pressed against the wall, feet out from the wall",
+            rep_description="5 second hold",
+            minimum_reps=10,
+            maximum_reps=20,
+            minimum_sets=1,
+            maximum_sets=2,
+            minimum_timedelta_between=timedelta(hours=16),
+            maximum_timedelta_between=timedelta(days=3),
+            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=20, sets_per_period=2)],
+            zone=core_two
+        ),
+        Exercise(
+            name="Shoulder Flexion Serratus Activation With Resistance Band or medball/object",
+            description=" Starting Position: Begin in a standing position with your shoulders and elbows flexed to 90 degrees. Place a band loop around your wrists. Movement: Engage your shoulder muscles by stretching the loop until your forearms are vertical at shoulder width apart from each other. Raise your arms up towards the ceiling and return to the starting position without reaching full elbow extension. Repeat as prescribed. Tip: Do not arch your low back during the exercise.",
+            rep_description="5 second hold",
+            minimum_reps=10,
+            maximum_reps=20,
+            minimum_sets=1,
+            maximum_sets=2,
+            minimum_timedelta_between=timedelta(hours=16),
+            maximum_timedelta_between=timedelta(days=3),
+            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=20, sets_per_period=2)],
+            zone=core_two
+        ),
+        Exercise(
+            name="Ulnar Nerve Glide",
+            description="Stand up comfortably. Start with your hand down at your side. Lift your hand up sideways to bring it over your ear. Rotate the hand so the fingers point downward when against your ear. To increase the tension, you can push your elbow backward at the end. Do not execute the exercise too fast; the symptoms can arise quickly. Stop the movement at the edge of where your symptoms are reproduced. Remember to only go up to the tingling but not past it. Back off a little bit if the tingling/numbness gets to be too much.",
+            rep_description="1 minute",
+            minimum_reps=1,
+            maximum_reps=1,
+            minimum_sets=1,
+            maximum_sets=3,
+            minimum_timedelta_between=timedelta(hours=16),
+            maximum_timedelta_between=timedelta(days=3),
+            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=3, sets_per_period=3)],
+            zone=core_three
         ),
         Exercise(
             name="Toe Curls With Towel",
@@ -304,8 +423,8 @@ def andrew_exercises(session):
             zone=plantar
         ),
         Exercise(
-            name="Leg marches",
-            description="",
+            name="Core marches",
+            description="Starting Position: Begin by lying on your back with your knees bent and feet flat on the floor. Movement: Tighten your abdominals and roll your hips backwards, feeling your low back press downwards towards the floor. Keeping your abdominals tight, alternate lifting your feet off the floor keeping your knees bent as if you are marching in place. Repeat as prescribed. Tip: Do not allow your low back to arch.",
             rep_description="1 march",
             minimum_reps=10,
             maximum_reps=10,
@@ -318,33 +437,33 @@ def andrew_exercises(session):
         ),
         Exercise(
             name="Bridges",
-            description="",
+            description=" Begin by lying with knees bent and both feet placed on the floor with arms at your sides. Raise your hips off the surface by squeezing your gluteal muscles. Attempt to bring the hips up to where they are in line between the knees and shoulders. Repeat as directed.",
             rep_description="1 bridge",
             minimum_reps=10,
             maximum_reps=10,
             minimum_sets=1,
             maximum_sets=3,
             minimum_timedelta_between=timedelta(hours=16),
-            maximum_timedelta_between=timedelta(days=7),
-            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=30, sets_per_period=3)],
+            maximum_timedelta_between=timedelta(days=2),
+            goals=[GoalPeriod(period=timedelta(days=2), reps_per_period=20, sets_per_period=2)],
             zone=sciatica
         ),
         Exercise(
             name="Clamshells with resistance band",
-            description="",
+            description="Begin by lying on your side with the side you intend to exercise upwards with an exercise band tied around your thighs. With your knees bent and feet together, slowly pull your knees apart, keeping your feet together. Hold as directed. Slowly bring your knees back together. Repeat as directed.",
             rep_description="1 clamshell on left and right side",
             minimum_reps=10,
             maximum_reps=10,
             minimum_sets=1,
             maximum_sets=3,
-            minimum_timedelta_between=timedelta(hours=16),
-            maximum_timedelta_between=timedelta(days=7),
-            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=30, sets_per_period=3)],
+            minimum_timedelta_between=timedelta(hours=2),
+            maximum_timedelta_between=timedelta(hours=4),
+            goals=[GoalPeriod(period=timedelta(days=2), reps_per_period=30, sets_per_period=3)],
             zone=sciatica
         ),
         Exercise(
             name="Farmer's carry",
-            description="",
+            description="Starting Position: Standing, holding desired KB in both arms at side. Movement: Walk desired distance while holding kettlebell's at side. Tip: Maintain height throughout walk, with good posture.",
             rep_description="1 minute of walking with 25lbs resistance",
             minimum_reps=1,
             maximum_reps=1,
@@ -360,6 +479,19 @@ def andrew_exercises(session):
             description="squats",
             rep_description="1 squat",
             minimum_reps=5,
+            maximum_reps=10,
+            minimum_sets=1,
+            maximum_sets=2,
+            minimum_timedelta_between=timedelta(hours=16),
+            maximum_timedelta_between=timedelta(days=2),
+            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=30, sets_per_period=3)],
+            zone=sciatica
+        ),
+        Exercise(
+            name="Kettlebell RDL (Romanian Deadlift)",
+            description="Starting Position: Begin by standing tall with feet shoulder width apart and knees unlocked. KB starts between your feet with the handle of kettlebell lining up with your ankles. Movement: Proceed into a hip hinging motion sitting hips back while maintaining natural curve of your back and reach for handle of kettlebell. Once gripped engage your core and lock your shoulder blades down and back. This should cause the kettlebell to hover slightly off the floor even before you start the motion. Extend upwards through your hips, using your hamstrings and glutes, spine in neutral the whole movement. Tip: Try not to bend knees to get depth, Try to keep hips square. Finish tall with glutes, but do not throw hips forward at top.",
+            rep_description="1 deadlift",
+            minimum_reps=8,
             maximum_reps=10,
             minimum_sets=1,
             maximum_sets=2,

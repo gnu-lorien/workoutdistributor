@@ -388,5 +388,4 @@ async def main():
             print(f"On {action.time} do {action.exercise.name} for {action.reps} reps and {action.sets} sets")
 
 
-# run(main)
-import bot
+run(main)

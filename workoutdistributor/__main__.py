@@ -7,15 +7,15 @@ from pprint import pprint
 from copy import copy
 import calendar
 import random
+import appdirs
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy import text, DateTime, Table, select
+from sqlalchemy import text, DateTime, Table, select, Text
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer, Unicode, Interval, UnicodeText
 from sqlalchemy.orm import declarative_base, Session, selectinload
 from sqlalchemy.orm import relationship
-import appdirs
 
 Base = declarative_base()
 
@@ -41,6 +41,7 @@ class Exercise(Base):
     name = Column(Unicode(30))  # Short name of the workout
     description = Column(UnicodeText())  # Description of the details of the workout
     rep_description = Column(UnicodeText())  # Description of what counts as 1 rep
+    url = Column(Text(2048))
 
     minimum_reps = Column(Integer())
     maximum_reps = Column(Integer())
@@ -51,6 +52,7 @@ class Exercise(Base):
     maximum_timedelta_between = Column(Interval())  # Maximum amount of time to put between each time of this exercise
 
     zone_id = Column(Integer(), ForeignKey("zone.id"))
+    zone = relationship("Zone", lazy="selectin")
 
     goals = relationship("GoalPeriod", back_populates="exercise", cascade="all, delete-orphan", lazy="selectin")
 
@@ -196,20 +198,12 @@ class Workout:
         return self._do_exercise_action(now, available[0])
 
 
-def andrew_exercises():
+def andrew_exercises(session):
+    plantar = Zone(name="Plantar Fasciitis")
+    sciatica = Zone(name="Sciatica")
+    neck = Zone(name="Slipped neck disk")
+    session.add_all([plantar, sciatica, neck])
     return [
-        Exercise(
-            name="squats",
-            description="squats",
-            rep_description="1 squat",
-            minimum_reps=5,
-            maximum_reps=10,
-            minimum_sets=1,
-            maximum_sets=2,
-            minimum_timedelta_between=timedelta(hours=16),
-            maximum_timedelta_between=timedelta(days=2),
-            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=30, sets_per_period=3)]
-        ),
         Exercise(
             name="Open books",
             description="Lie on your side and raise one arm away from the other like you're a book being opened",
@@ -220,31 +214,94 @@ def andrew_exercises():
             maximum_sets=1,
             minimum_timedelta_between=timedelta(days=2),
             maximum_timedelta_between=timedelta(days=7),
-            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=1, sets_per_period=1)]
+            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=1, sets_per_period=1)],
+            zone=neck
         ),
         Exercise(
-            name="Stair calf raises",
-            description="Stand on the edge of the stairs with your foot just less than half-way on. Drop down for 30 seconds and then do five calf raises",
-            rep_description="30 second drop and 5 calf raises",
-            minimum_reps=1,
+            name="Toe Curls With Towel",
+            description="Place a small towel on the floor. Using involved foot, curl towel toward you, using only your toes. Relax.",
+            rep_description="Place a small towel on the floor. Using involved foot, curl towel toward you, using only your toes. Relax.",
+            url="https://www.ortho.wustl.edu/content/Education/3691/Patient-Education/Educational-Materials/Plantar-Fasciitis-Exercises.aspx",
+            minimum_reps=10,
+            maximum_reps=10,
+            minimum_sets=1,
+            maximum_sets=1,
+            minimum_timedelta_between=timedelta(hours=4),
+            maximum_timedelta_between=timedelta(days=2),
+            goals=[GoalPeriod(period=timedelta(days=2), reps_per_period=20, sets_per_period=2)],
+            zone=plantar
+        ),
+        Exercise(
+            name="Toe Extension",
+            description="Sit with involved leg crossed over uninvolved leg. Grasp toes with one hand and bend the toes and ankle upwards as far as possible to stretch the arch and calf muscle. With the other hand, perform deep massage along the arch of your foot.",
+            rep_description="Hold 10 seconds.",
+            url="https://www.ortho.wustl.edu/content/Education/3691/Patient-Education/Educational-Materials/Plantar-Fasciitis-Exercises.aspx",
+            minimum_reps=6,
+            maximum_reps=6,
+            minimum_sets=2,
+            maximum_sets=3,
+            minimum_timedelta_between=timedelta(hours=1),
+            maximum_timedelta_between=timedelta(days=2),
+            goals=[GoalPeriod(period=timedelta(days=2), reps_per_period=6 * 2, sets_per_period=2 * 2)],
+            zone=plantar
+        ),
+        Exercise(
+            name="Standing Calf Stretch",
+            description="Stand placing hands on wall for support. Place your feet pointing straight ahead, with the involved foot in back of the other. The back leg should have a straight knee and front leg a bent knee. Shift forward, keeping back leg heel on the ground, so that you feel a stretch in the calf muscle of the back leg.",
+            rep_description="Hold 45 seconds.",
+            url="https://www.ortho.wustl.edu/content/Education/3691/Patient-Education/Educational-Materials/Plantar-Fasciitis-Exercises.aspx",
+            minimum_reps=2,
+            maximum_reps=3,
+            minimum_sets=2,
+            maximum_sets=3,
+            minimum_timedelta_between=timedelta(hours=1),
+            maximum_timedelta_between=timedelta(days=2),
+            goals=[GoalPeriod(period=timedelta(days=2), reps_per_period=4 * 2, sets_per_period=4)],
+            zone=plantar
+        ),
+        Exercise(
+            name="Towel Stretch",
+            description="""The towel stretch is effective at reducing morning pain if done before getting out of bed.
+                           1. Sit with involved leg straight out in front of you. Place a towel around your foot and
+                           gently pull toward you, feeling a stretch in your calf muscle.""",
+            rep_description="Hold 45 seconds.",
+            url="https://www.ortho.wustl.edu/content/Education/3691/Patient-Education/Educational-Materials/Plantar-Fasciitis-Exercises.aspx",
+            minimum_reps=2,
+            maximum_reps=3,
+            minimum_sets=2,
+            maximum_sets=3,
+            minimum_timedelta_between=timedelta(hours=1),
+            maximum_timedelta_between=timedelta(days=2),
+            goals=[GoalPeriod(period=timedelta(days=2), reps_per_period=4 * 2, sets_per_period=4)],
+            zone=plantar
+        ),
+        Exercise(
+            name="Calf Stretch on a Step",
+            description="""Stand with uninvolved foot flat on a step. Place involved ball of foot on the edge of the step. Gently let heel lower on involved leg to feel a stretch in your calf.""",
+            rep_description="Hold 45 seconds.",
+            url="https://www.ortho.wustl.edu/content/Education/3691/Patient-Education/Educational-Materials/Plantar-Fasciitis-Exercises.aspx",
+            minimum_reps=2,
+            maximum_reps=3,
+            minimum_sets=2,
+            maximum_sets=3,
+            minimum_timedelta_between=timedelta(hours=1),
+            maximum_timedelta_between=timedelta(days=2),
+            goals=[GoalPeriod(period=timedelta(days=2), reps_per_period=4 * 2, sets_per_period=4)],
+            zone=plantar
+        ),
+        Exercise(
+            name="Ice Massage Arch Roll",
+            description="With involved foot resting on a frozen can or water bottle, golf ball, or tennis ball, roll your foot back and forth over the object. ",
+            rep_description="Roll 1 minute",
+            url="https://www.ortho.wustl.edu/content/Education/3691/Patient-Education/Educational-Materials/Plantar-Fasciitis-Exercises.aspx",
+            minimum_reps=3,
             maximum_reps=5,
             minimum_sets=1,
             maximum_sets=1,
-            minimum_timedelta_between=timedelta(days=2),
-            maximum_timedelta_between=timedelta(days=7),
-            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=1, sets_per_period=1)]
-        ),
-        Exercise(
-            name="Calf book stretch and raise",
-            description="Place books a foot or two away from the wall. Stand with your foot half-way on. Lean into wall for 30 seconds then do five calf raises",
-            rep_description="30 second drop and 5 calf raises",
-            minimum_reps=1,
-            maximum_reps=5,
-            minimum_sets=1,
-            maximum_sets=1,
-            minimum_timedelta_between=timedelta(days=2),
-            maximum_timedelta_between=timedelta(days=7),
-            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=1, sets_per_period=1)]
+            minimum_timedelta_between=timedelta(hours=4),
+            maximum_timedelta_between=timedelta(days=2),
+            goals=[GoalPeriod(period=timedelta(days=2), reps_per_period=5, sets_per_period=2)],
+            zone=plantar
         ),
         Exercise(
             name="Leg marches",
@@ -256,7 +313,8 @@ def andrew_exercises():
             maximum_sets=3,
             minimum_timedelta_between=timedelta(hours=1),
             maximum_timedelta_between=timedelta(hours=2),
-            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=30, sets_per_period=3)]
+            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=30, sets_per_period=3)],
+            zone=sciatica
         ),
         Exercise(
             name="Bridges",
@@ -268,7 +326,8 @@ def andrew_exercises():
             maximum_sets=3,
             minimum_timedelta_between=timedelta(hours=16),
             maximum_timedelta_between=timedelta(days=7),
-            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=30, sets_per_period=3)]
+            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=30, sets_per_period=3)],
+            zone=sciatica
         ),
         Exercise(
             name="Clamshells with resistance band",
@@ -280,7 +339,8 @@ def andrew_exercises():
             maximum_sets=3,
             minimum_timedelta_between=timedelta(hours=16),
             maximum_timedelta_between=timedelta(days=7),
-            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=30, sets_per_period=3)]
+            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=30, sets_per_period=3)],
+            zone=sciatica
         ),
         Exercise(
             name="Farmer's carry",
@@ -292,15 +352,29 @@ def andrew_exercises():
             maximum_sets=4,
             minimum_timedelta_between=timedelta(hours=16),
             maximum_timedelta_between=timedelta(days=7),
-            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=4, sets_per_period=4)]
-        )
+            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=4, sets_per_period=4)],
+            zone=sciatica
+        ),
+        Exercise(
+            name="squats",
+            description="squats",
+            rep_description="1 squat",
+            minimum_reps=5,
+            maximum_reps=10,
+            minimum_sets=1,
+            maximum_sets=2,
+            minimum_timedelta_between=timedelta(hours=16),
+            maximum_timedelta_between=timedelta(days=2),
+            goals=[GoalPeriod(period=timedelta(weeks=1), reps_per_period=30, sets_per_period=3)],
+            zone=sciatica
+        ),
     ]
 
 
 async def andrew_workout_plan(session):
     wp = WorkoutPlan(
         name="Andrew's Workout Plan",
-        exercises=andrew_exercises(),
+        exercises=andrew_exercises(session),
         periods=[
             WorkoutPeriod(day_of_week=calendar.MONDAY, start=timedelta(hours=11), end=timedelta(hours=11 + 8)),
             WorkoutPeriod(day_of_week=calendar.TUESDAY, start=timedelta(hours=11), end=timedelta(hours=11 + 8)),
